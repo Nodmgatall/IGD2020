@@ -3,11 +3,11 @@
 public class CameraMovement : MonoBehaviour
 {
 
-    public float m_speed;
-    public float m_zoomSpeed;
+    public float m_speed; //movement speed x,z
+    public float m_zoomSpeed; // movement y
     public float m_rotationSpeed;
-    public float m_maxHeight = 100;
-    public float m_minHeight = 20;
+    public float m_maxHeight = 100; // maxZoom
+    public float m_minHeight = 20; // minZoom
     public float boundaryFractionX = 0.015f;
     public float boundaryFractionY = 0.015f;
     float boundaryX;
@@ -22,7 +22,7 @@ public class CameraMovement : MonoBehaviour
     {
         theScreenWidth = Screen.width;
         theScreenHeight = Screen.height;
-        boundaryX = theScreenWidth * boundaryFractionX;
+        boundaryX = theScreenWidth * boundaryFractionX; // TODO: change on resize
         boundaryY = theScreenHeight * boundaryFractionY;
     }
 
@@ -46,11 +46,10 @@ public class CameraMovement : MonoBehaviour
         float mW = Input.GetAxis("Mouse ScrollWheel");
         if(mW  != 0){
             float newHeight = Mathf.Max(transform.position.y - (mW * m_zoomSpeed), m_minHeight);
-            transform.position = new Vector3(transform.position.x,Mathf.Min(newHeight, m_maxHeight),transform.position.z);
-            Debug.Log("what now?");
+            transform.position = new Vector3(transform.position.x,Mathf.Min(newHeight, m_maxHeight),transform.position.z); //TODO integrate into change vector
         }
-        float mPosX =Input.mousePosition.x;
-        float mPosY =Input.mousePosition.y;
+        float mPosX = Input.mousePosition.x;
+        float mPosY = Input.mousePosition.y;
         if ( mPosX > theScreenWidth - boundaryX && mPosX < theScreenWidth)
         {
             change.x += speed;

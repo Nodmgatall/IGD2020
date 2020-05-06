@@ -13,10 +13,13 @@ public class perlinNoise : MonoBehaviour
     public float zoom;
     public Vector2 pos;
     Texture2D tex;
+    Texture2D anither;
     Renderer m_renderer;
 
     void Start()
     {
+        if(tex == null)
+            tex = new Texture2D(width, height);
         Debug.Log("Start Called");
     }
 
@@ -31,7 +34,6 @@ public class perlinNoise : MonoBehaviour
     public void GenTextures()
     {
         Debug.Log("gen textures called");
-        m_renderer.material.mainTexture = generateTexture();
     }
 
     Texture2D generateTexture(){
@@ -51,7 +53,7 @@ public class perlinNoise : MonoBehaviour
     {
         x = width/2.0f + x + pos.x;
         y = height/2.0f + y + pos.y;
-        float[] f = {0.6f, 0.3f, 0.1f};
+        float[] f = {0.6f, 0.3f, 0.1f}; //Rename
         float sample = 0.0f;
         for (int i = 0; i < scales.Length; i++){
             float xCoord =(float)x / (float)width * scales[i];
