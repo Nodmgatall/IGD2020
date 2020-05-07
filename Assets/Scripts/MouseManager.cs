@@ -17,6 +17,5 @@ public class MouseManager : MonoBehaviour
                 Debug.Log(hit.collider.gameObject.name);
             }
         }
-        
     }
 }
