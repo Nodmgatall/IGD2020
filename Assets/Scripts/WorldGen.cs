@@ -61,8 +61,8 @@ public class WorldGen : MonoBehaviour
     // Start is called before the first frame update
     MapGrid m_mapGrid;
 
-    public GameObject[] m_vectorNoiseGens = new GameObject[6];
-    public GameObject[] m_vectorPrefabs = new GameObject[6];
+    public NoiseManager[] m_vectorNoiseGens;
+    public GameObject standartTile;
     GameObject m_map; // dummy object to hold generated tiles as children
 
     public GameObject m_elevationNoise;
@@ -74,7 +74,9 @@ public class WorldGen : MonoBehaviour
     void Start(){
         m_map = new GameObject();
         m_map.transform.parent  = transform; // setting parent for tile holder
+        LoadMap();
     }
+
     public void LoadMap()
     {
         Debug.Log("LoadMap called");
@@ -88,8 +90,16 @@ public class WorldGen : MonoBehaviour
             float x = v.x;
             float y = v.z;
             float[] noiseValues = getNoise(x, y, m_origin);
-            int tileIDx = getTileIDXFromNoise(noiseValues,x,y);
-            var createdObject = Instantiate(getPrefab(tileIDx),v, Quaternion.identity);
+            GameObject createdObject;
+            if(noiseValues.Sum() < 0.001f)
+            {
+                createdObject = Instantiate(standartTile,v, Quaternion.identity);
+            }
+            else
+            {
+                int genIDX = noiseValues.ToList().IndexOf(Mathf.Max(noiseValues));
+                createdObject = Instantiate(getPrefab(genIDX),v, Quaternion.identity);
+            }
             createdObject.transform.parent = m_map.transform;
 
         }
@@ -99,10 +109,16 @@ public class WorldGen : MonoBehaviour
         for (int i = 0; i < m_vectorNoiseGens.Length; i++)
         {
             if (m_vectorNoiseGens[i] != null){
-                perlinNoise p = m_vectorNoiseGens[i].GetComponent(typeof(perlinNoise)) as perlinNoise;
-                generatedNoiseValues[i] = p.getNoise(x,y, chunkOrigin);
+                NoiseManager p = m_vectorNoiseGens[i].GetComponent(typeof(NoiseManager)) as NoiseManager;
+                generatedNoiseValues[i] = p.getNoise(x + chunkOrigin.x,y + chunkOrigin.z);
             }
         }
+        string str = "";
+        foreach (var a in generatedNoiseValues)
+        {
+            str += a + " ";
+        }
+        //Debug.Log(str);
         return generatedNoiseValues;
 
     }
@@ -113,7 +129,7 @@ public class WorldGen : MonoBehaviour
 
         perlinNoise heightNoise = m_elevationNoise.GetComponent(typeof(perlinNoise)) as perlinNoise;
 
-        float heigtAtXY = heightNoise.getNoise(p_tileXCoord,p_tileYCoord,m_origin);
+        float heigtAtXY = heightNoise.getNoise(m_origin.x + p_tileXCoord,m_origin.z + p_tileYCoord);
         float toEval = Math.Abs(p_tileYCoord /(m_mapGrid.getMaxY()));
         float climateZoneValue = m_climate.Evaluate(toEval);
 
@@ -142,30 +158,30 @@ public class WorldGen : MonoBehaviour
         //CLIMATE END
 
         //DETAILS rocks mountains, ponds
-        if(vectorIdxOfNewTile != 0)
-        {
-            //vectorIdxOfNewTile = noiseValues.ToList().IndexOf(noiseValues.Max());
-            if(noiseValues[1] > 0.0f)
-            {
-                vectorIdxOfNewTile = 2;
-            }
-            if(noiseValues[2] > 0.0f)
-            {
-                vectorIdxOfNewTile = 3;
-            }
-            if(noiseValues[0] > 0.0f)
-            {
-                vectorIdxOfNewTile = 0;
-            }
-        }
+        //if(vectorIdxOfNewTile != 0)
+        //{
+        //    //vectorIdxOfNewTile = noiseValues.ToList().IndexOf(noiseValues.Max());
+        //    if(noiseValues[1] > 0.0f)
+        //    {
+        //        vectorIdxOfNewTile = 2;
+        //    }
+        //    if(noiseValues[2] > 0.0f)
+        //    {
+        //        vectorIdxOfNewTile = 3;
+        //    }
+        //    if(noiseValues[0] > 0.0f)
+        //    {
+        //        vectorIdxOfNewTile = 0;
+        //    }
+        //}
         return vectorIdxOfNewTile;
     }
 
     GameObject getPrefab(int p_vectorIDxTile)
     {
-        if(m_vectorPrefabs[p_vectorIDxTile] != null) //dont use unset prefabs
-            return m_vectorPrefabs[p_vectorIDxTile];
+        if(m_vectorNoiseGens[p_vectorIDxTile] != null) //dont use unset prefabs
+            return m_vectorNoiseGens[p_vectorIDxTile].getPrefab();
         Debug.Log("Error: prefab not set"); //print error
-        return m_vectorPrefabs[0]; // return the first (hopefully at least that one is set) <<< BAD!
+        return m_vectorNoiseGens[0].getPrefab(); // return the first (hopefully at least that one is set) <<< BAD!
     }
 }
