@@ -14,7 +14,6 @@ public class NoiseVisualizer : MonoBehaviour
     int m_width;
     int m_height;
     public RawImage image;
-    public GameObject camera;
     void Start()
     {
         m_width = m_noiseManager.m_noiseGenerator.width;
