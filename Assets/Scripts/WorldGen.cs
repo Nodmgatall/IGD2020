@@ -3,6 +3,15 @@ using System;
 using System.Linq;
 using System.Collections;
 
+[Serializable]
+public class NoiseSettings{
+
+    [Range(0,1)]
+    public float cutoffMin = 0;
+    [Range(0,1)]
+    public float cutoffMax = 1;
+};
+[Serializable]
 public struct MapGrid
 {
     Vector3 m_origin;
@@ -21,9 +30,8 @@ public struct MapGrid
     {
         int radiusWithCenter = p_radius + 1; // center tile needed to be included here
 
-        m_radius = p_radius;
-
         m_origin = p_origin;
+        m_radius = p_radius;
 
         m_offsetTopDown = new Vector3(0f,0f,10.003f);
         m_offsetTopLeft = new Vector3(8.6625f,0f, -5.0f);
@@ -55,53 +63,103 @@ public struct MapGrid
         }
     }
 }
+
 // [ExecuteInEditMode]  // OUTCOMMENT IF YOU WANT THIS TO RUN IN EDITOR
 public class WorldGen : MonoBehaviour
 {
     // Start is called before the first frame update
-    MapGrid m_mapGrid;
+    public MapGrid m_mapGrid;
 
     public NoiseManager[] m_vectorNoiseGens;
     public GameObject standartTile;
     GameObject m_map; // dummy object to hold generated tiles as children
 
-    public GameObject m_elevationNoise;
+    public perlinNoise m_elevationNoise;
+    public perlinNoise m_forestNoise;
+    public NoiseManager m_forestNoiseManager;
+    public perlinNoise m_stoneNoise;
+    public NoiseManager m_stoneNoiseManager;
     public AnimationCurve m_climate;
 
+    public GameObject m_camera;
     public int radius = 12;
     public Vector3 m_origin;
 
+    void FixedUpdate()
+    {
+        if(Input.GetKeyUp("l"))
+        {
+            Debug.Log("CalledNoise");
+            LoadMap();
+        }
+    }
+    bool invoked = false;
+
+    void OnValidate()
+    {
+
+        if(invoked == false){
+            Invoke("LoadMap",1);
+            invoked = true;
+        }
+    }
+
     void Start(){
+        m_mapGrid = new MapGrid( m_origin, radius);
         m_map = new GameObject();
         m_map.transform.parent  = transform; // setting parent for tile holder
-        LoadMap();
     }
 
     public void LoadMap()
     {
+        m_origin = m_camera.transform.position;
         Debug.Log("LoadMap called");
         foreach (Transform child in m_map.transform)
         {
             Destroy(child.gameObject);
         }
-        m_mapGrid = new MapGrid( m_origin, radius);
+
         m_mapGrid.createHexShapedBasicGrid();
         foreach (Vector3 v in m_mapGrid.getGrid()){
-            float x = v.x;
-            float y = v.z;
+            float x = v.x + m_origin.x;
+            float y = v.z + m_origin.z;
             float[] noiseValues = getNoise(x, y, m_origin);
+            float height = m_elevationNoise.getNoise(x,y);
+            Vector3 nV = new Vector3(v.x,(int) (height * 10 ), v.z);
+            nV.x += m_origin.x;
+            nV.z += m_origin.z;
+
             GameObject createdObject;
-            if(noiseValues.Sum() < 0.001f)
+            GameObject toCreate = standartTile;
+            if(noiseValues.Sum() > 0.001f)
             {
-                createdObject = Instantiate(standartTile,v, Quaternion.identity);
-            }
-            else
-            {
+
                 int genIDX = noiseValues.ToList().IndexOf(Mathf.Max(noiseValues));
-                createdObject = Instantiate(getPrefab(genIDX),v, Quaternion.identity);
+                toCreate = getPrefab(genIDX);
+                if(genIDX == 2)
+                {
+                    float forestNoise  = m_forestNoiseManager.getNoise(x,y, ref m_forestNoise);
+                    if(forestNoise > 0.0f)
+                    {
+                        toCreate = m_forestNoiseManager.getPrefab();
+                    }
+                    else
+                    {
+                        float stoneNoise  = m_stoneNoiseManager.getNoise(x,y, ref m_stoneNoise);
+                        if(stoneNoise > 0.0f)
+                        {
+                            toCreate = m_stoneNoiseManager.getPrefab();
+                        }
+                    }
+                }
+                createdObject = Instantiate(toCreate,nV, Quaternion.identity);
+            }
+            else{
+                nV.y = 0;
+                createdObject = Instantiate(toCreate,nV, Quaternion.identity);
             }
             createdObject.transform.parent = m_map.transform;
-
+            invoked = false;
         }
     }
     float[] getNoise(float x, float y, Vector3 chunkOrigin){
@@ -109,8 +167,8 @@ public class WorldGen : MonoBehaviour
         for (int i = 0; i < m_vectorNoiseGens.Length; i++)
         {
             if (m_vectorNoiseGens[i] != null){
-                NoiseManager p = m_vectorNoiseGens[i].GetComponent(typeof(NoiseManager)) as NoiseManager;
-                generatedNoiseValues[i] = p.getNoise(x + chunkOrigin.x,y + chunkOrigin.z);
+                NoiseManager p = m_vectorNoiseGens[i];
+                generatedNoiseValues[i] = p.getNoise(x + chunkOrigin.x,y + chunkOrigin.z, ref   m_elevationNoise);
             }
         }
         string str = "";
@@ -123,59 +181,6 @@ public class WorldGen : MonoBehaviour
 
     }
 
-    int getTileIDXFromNoise(float [] noiseValues,float p_tileXCoord, float p_tileYCoord)
-    {
-        int vectorIdxOfNewTile =  0;
-
-        perlinNoise heightNoise = m_elevationNoise.GetComponent(typeof(perlinNoise)) as perlinNoise;
-
-        float heigtAtXY = heightNoise.getNoise(m_origin.x + p_tileXCoord,m_origin.z + p_tileYCoord);
-        float toEval = Math.Abs(p_tileYCoord /(m_mapGrid.getMaxY()));
-        float climateZoneValue = m_climate.Evaluate(toEval);
-
-
-        //CLIMATE START
-        if(climateZoneValue > 0.95)
-        {
-            //return "sand"
-            vectorIdxOfNewTile =  4;
-        }
-        else if(climateZoneValue > 0.7)
-        {
-            //vectorIdxOfNewTile =  Grass
-            vectorIdxOfNewTile =  5;
-        }
-        else if(climateZoneValue > 0.55)
-        {
-            //vectorIdxOfNewTile =  Forest
-            vectorIdxOfNewTile =  1;
-        }
-        else if(climateZoneValue > 0.3)
-        {
-            //vectorIdxOfNewTile =  Grass
-            vectorIdxOfNewTile =  5;
-        }
-        //CLIMATE END
-
-        //DETAILS rocks mountains, ponds
-        //if(vectorIdxOfNewTile != 0)
-        //{
-        //    //vectorIdxOfNewTile = noiseValues.ToList().IndexOf(noiseValues.Max());
-        //    if(noiseValues[1] > 0.0f)
-        //    {
-        //        vectorIdxOfNewTile = 2;
-        //    }
-        //    if(noiseValues[2] > 0.0f)
-        //    {
-        //        vectorIdxOfNewTile = 3;
-        //    }
-        //    if(noiseValues[0] > 0.0f)
-        //    {
-        //        vectorIdxOfNewTile = 0;
-        //    }
-        //}
-        return vectorIdxOfNewTile;
-    }
 
     GameObject getPrefab(int p_vectorIDxTile)
     {
@@ -184,4 +189,5 @@ public class WorldGen : MonoBehaviour
         Debug.Log("Error: prefab not set"); //print error
         return m_vectorNoiseGens[0].getPrefab(); // return the first (hopefully at least that one is set) <<< BAD!
     }
+
 }
