@@ -3,28 +3,26 @@ using System.Linq;
 using System;
 public class mapSettings{};
 
-public class perlinNoise : MonoBehaviour
+
+[Serializable]
+public class perlinNoise
 {
+    [HideInInspector]
     public int width = 128;
+    [HideInInspector]
     public int height  = 128;
-    public float[] scales = {1.0f,1.0f,1.0f};
+    [HideInInspector]
     public Vector2 pos;
+    [HideInInspector]
     float offset = 100000;
+    public float roughness = 0.03f;
+    public float strength = 1;
+    public float nheight = 0;
 
     public float getNoise(float p_x, float p_y)
     {
-        float x =(float) width/2.0f + (p_x + pos.x);
-        float y =(float) height/2.0f + (p_y + pos.y);
-        float[] f = {1f, 0.6f, 0.3f}; //Rename
-        float[] g = new float[3]; //Rename
-        float xCoord =(float)x / (float)width ;
-        float yCoord =(float)y / (float)height  ;
-        for (int i = 0; i < scales.Length; i++){
-            xCoord *= scales[i] * f[i];
-            yCoord *= scales[i] * f[i];
-            g[i] = Mathf.PerlinNoise( offset + xCoord, offset + yCoord);
-        }
+        float g = Mathf.PerlinNoise( offset + (p_x *roughness) , offset +  (p_y * roughness) );
 
-        return g.Max();
+        return (g * strength) + nheight;
     }
 }
