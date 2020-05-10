@@ -22,18 +22,16 @@ public class MouseManager : MonoBehaviour
                 Debug.Log(hit.collider.gameObject.name);
             }
         }
-
+        
         // Code to move the camera while holding down right mouse button
-        if (Input.GetMouseButton(1)) // When right button of mouse held down then its true
-        {
-            Debug.Log("Inside getmousebutton");
-            lastPosition = Input.mousePosition;
-        }
         if (Input.GetMouseButtonDown(1)) // When right button of mouse is pressed
         {
-            Debug.Log("Inside getmousebuttondown");
+            lastPosition = Input.mousePosition;
+        }
+        if (Input.GetMouseButton(1)) // When right button of mouse held down then its true
+        {
             Vector3 delta = Input.mousePosition - lastPosition;
-            mainCamera.transform.Translate(delta.x * mouseSensitivity, delta.z * mouseSensitivity, delta.z * mouseSensitivity);
+            mainCamera.transform.Translate(delta.x * mouseSensitivity, 0, delta.y * mouseSensitivity);
             lastPosition = Input.mousePosition;
         }
     }
