@@ -81,6 +81,7 @@ public class WorldGen : MonoBehaviour
     public NoiseManager m_stoneNoiseManager;
     public AnimationCurve m_climate;
 
+    public GameObject m_camera;
     public int radius = 12;
     public Vector3 m_origin;
 
@@ -111,6 +112,7 @@ public class WorldGen : MonoBehaviour
 
     public void LoadMap()
     {
+        m_origin = m_camera.transform.position;
         Debug.Log("LoadMap called");
         foreach (Transform child in m_map.transform)
         {
@@ -119,12 +121,15 @@ public class WorldGen : MonoBehaviour
 
         m_mapGrid.createHexShapedBasicGrid();
         foreach (Vector3 v in m_mapGrid.getGrid()){
-            float x = v.x;
-            float y = v.z;
+            float x = v.x + m_origin.x;
+            float y = v.z + m_origin.z;
             float[] noiseValues = getNoise(x, y, m_origin);
-            GameObject createdObject;
-            float height = m_elevationNoise.getNoise(v.x + m_origin.x, v.z + m_origin.z);
+            float height = m_elevationNoise.getNoise(x,y);
             Vector3 nV = new Vector3(v.x,(int) (height * 10 ), v.z);
+            nV.x += m_origin.x;
+            nV.z += m_origin.z;
+
+            GameObject createdObject;
             GameObject toCreate = standartTile;
             if(noiseValues.Sum() > 0.001f)
             {
@@ -133,14 +138,14 @@ public class WorldGen : MonoBehaviour
                 toCreate = getPrefab(genIDX);
                 if(genIDX == 2)
                 {
-                    float forestNoise  = m_forestNoiseManager.getNoise(v.x + m_origin.x, v.z + m_origin.z, ref m_forestNoise);
+                    float forestNoise  = m_forestNoiseManager.getNoise(x,y, ref m_forestNoise);
                     if(forestNoise > 0.0f)
                     {
                         toCreate = m_forestNoiseManager.getPrefab();
                     }
                     else
                     {
-                        float stoneNoise  = m_stoneNoiseManager.getNoise(v.x + m_origin.x, v.z + m_origin.z, ref m_stoneNoise);
+                        float stoneNoise  = m_stoneNoiseManager.getNoise(x,y, ref m_stoneNoise);
                         if(stoneNoise > 0.0f)
                         {
                             toCreate = m_stoneNoiseManager.getPrefab();
@@ -150,7 +155,8 @@ public class WorldGen : MonoBehaviour
                 createdObject = Instantiate(toCreate,nV, Quaternion.identity);
             }
             else{
-                createdObject = Instantiate(toCreate,v, Quaternion.identity);
+                nV.y = 0;
+                createdObject = Instantiate(toCreate,nV, Quaternion.identity);
             }
             createdObject.transform.parent = m_map.transform;
             invoked = false;
