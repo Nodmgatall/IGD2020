@@ -71,5 +71,24 @@ public class CameraMovement : MonoBehaviour
         }
 
         transform.position += change;
+        if(Input.GetKey("space"))
+        {
+            jumpTo(0,0);
+        }
+    }
+
+    public void jumpTo(float x, float y)
+    {
+        float height = transform.position.y;
+        float cameraAngle = 75; // TODO: get this from the camera itself
+
+        Vector3 cameraForward = transform.GetChild(0).forward;
+        float lenght = height / Mathf.Sin(cameraAngle);
+        var offset = (cameraForward * lenght);
+
+        Vector3 newPos = offset + new Vector3(x,0,y);
+        newPos.y = height;
+
+        transform.position = newPos;
     }
 }
