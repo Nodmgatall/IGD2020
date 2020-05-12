@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Collections;
+using System.Collections.Generic;
 
 [Serializable]
 public class NoiseSettings{
@@ -11,34 +12,51 @@ public class NoiseSettings{
     [Range(0,1)]
     public float cutoffMax = 1;
 };
+public enum GridType{Hex, Square};
 [Serializable]
-public struct MapGrid
+public class MapGrid
 {
     Vector3 m_origin;
 
     //Offsets to next neighbour tile
     Vector3 m_offsetTopDown;
-    Vector3 m_offsetTopLeft;
+    Vector3 m_offsetBotRight;
 
-    int m_radius; // radius without center tile
+    int m_numHorizontal;
+    int m_numVertical;
     public float m_maxY; // max absolute scenespace Z value.
     public Vector3[] m_grid; // vector for grid positions
+    public GridType m_gridType;
 
     int m_numHexTiles;
 
-    public MapGrid(Vector3 p_origin, int p_radius)
+    void init(Vector3 p_origin, GridType p_gridType, Vector3 p_offsetTop, Vector3 p_offsetBotRight)
     {
-        int radiusWithCenter = p_radius + 1; // center tile needed to be included here
-
         m_origin = p_origin;
-        m_radius = p_radius;
+        m_gridType = p_gridType;
+        m_offsetTopDown = p_offsetTop;
+        m_offsetBotRight = p_offsetBotRight;
+    }
+    public MapGrid(Vector3 p_origin, int p_numHorizontal, int p_numVertical, Vector3 p_offsetTop, Vector3 p_offsetBotRight)
+    {
+        init(p_origin, GridType.Square, p_offsetTop, p_offsetBotRight);
 
-        m_offsetTopDown = new Vector3(0f,0f,10.003f);
-        m_offsetTopLeft = new Vector3(8.6625f,0f, -5.0f);
+        m_numVertical = p_numVertical;
+        m_numHorizontal = p_numHorizontal;
+        m_numHexTiles = p_numHorizontal * p_numVertical;
 
-        m_numHexTiles = (3 * (radiusWithCenter * radiusWithCenter)) - (3 * radiusWithCenter) + 1;
         m_grid = new Vector3[m_numHexTiles];
-        m_maxY = m_radius * m_offsetTopDown.z;
+    }
+    public MapGrid(Vector3 p_origin, int p_radius, Vector3 p_offsetTop, Vector3 p_offsetBotRight)
+    {
+        init(p_origin, GridType.Hex, p_offsetTop, p_offsetBotRight);
+
+        int radiusWithCenter = p_radius + 1; // center tile needed to be included here
+        m_numVertical = radiusWithCenter;
+        m_numHorizontal = radiusWithCenter;
+        m_numHexTiles = (3 * (radiusWithCenter * radiusWithCenter)) - (3 * radiusWithCenter) + 1;
+
+        m_grid = new Vector3[m_numHexTiles];
     }
 
     public Vector3[] getGrid(){
@@ -48,15 +66,40 @@ public struct MapGrid
     public float getMaxY(){
         return m_maxY;
     }
+    public void create()
+    {
+        if(m_gridType == GridType.Hex)
+        {
+            createHexShapedBasicGrid();
+        }
+        else{
+            createSquareBasedGrid();
+        }
+    }
+    public void createSquareBasedGrid()
+    {
+        int tileID = 0;
+        for(int x = 0; x < m_numHorizontal; x++)
+        {
+            int removeX = 0;
+            for(int y = 0; y < m_numVertical; y++){
+                Vector3 pos = x * m_offsetTopDown + (m_numVertical * -m_offsetTopDown) + (m_numHorizontal * -m_offsetBotRight);
+                pos += m_offsetBotRight * y + removeX * m_offsetTopDown;
+                removeX += y % 2;
+                m_grid[tileID++] = pos + m_origin;
+            }
+        }
+    }
 
     public void createHexShapedBasicGrid()
     {
+        int radius = m_numVertical;
         int tileID = 0;
-        for (int q = -m_radius; q <= m_radius; q++) {
-            int r1 =Math.Max(-m_radius, -q - m_radius);
-            int r2 =Math.Min(m_radius, -q + m_radius);
+        for (int q = -radius; q <= radius; q++) {
+            int r1 =Math.Max(-radius, -q - radius);
+            int r2 =Math.Min(radius, -q + radius);
             for (int r = r1; r <= r2; r++) {
-                m_grid[tileID] = m_origin + q * m_offsetTopLeft + r * m_offsetTopDown + r * m_offsetTopLeft;
+                m_grid[tileID] = m_origin + q * m_offsetBotRight + r * m_offsetTopDown + r * m_offsetBotRight;
                 m_maxY= Math.Max(m_maxY, m_grid[tileID].z);
                 tileID++;
             }
@@ -64,26 +107,60 @@ public struct MapGrid
     }
 }
 
+[Serializable]
+public class WorldChunk{
+    public Vector3 m_origin;
+    public MapGrid m_mapGrid;
+
+    [HideInInspector]
+    public GameObject m_root;
+
+    public WorldChunk(Vector3 p_origin, int p_numHorizontal, int p_numVertical, Vector3 p_offsetTop, Vector3 p_offsetBotRight)
+    {
+        m_root = new GameObject();
+        m_mapGrid = new MapGrid(p_origin, p_numHorizontal, p_numVertical,p_offsetTop, p_offsetBotRight);
+        m_mapGrid.create();
+    }
+};
+
 // [ExecuteInEditMode]  // OUTCOMMENT IF YOU WANT THIS TO RUN IN EDITOR
 public class WorldGen : MonoBehaviour
 {
     // Start is called before the first frame update
-    public MapGrid m_mapGrid;
+    List<WorldChunk> m_chunks;
 
-    public NoiseManager[] m_vectorNoiseGens;
     public GameObject standartTile;
     GameObject m_map; // dummy object to hold generated tiles as children
 
+    public NoiseManager[] m_vectorNoiseGens;
     public perlinNoise m_elevationNoise;
     public perlinNoise m_forestNoise;
-    public NoiseManager m_forestNoiseManager;
     public perlinNoise m_stoneNoise;
+
+    public NoiseManager m_forestNoiseManager;
     public NoiseManager m_stoneNoiseManager;
+
     public AnimationCurve m_climate;
 
     public GameObject m_camera;
     public int radius = 12;
     public Vector3 m_origin;
+    float m_chunkOffsetHorizontal;
+    float m_chunkOffsetVectical;
+    public int m_numHorizontal;
+    public int m_numVertical;
+    public int m_chunkSizeX;
+    public int m_chunkSizeY;
+
+    Vector3 m_offsetTopDown = new Vector3(0f,0f,10.003f);
+    Vector3 m_offsetBotRight = new Vector3(8.6625f,0f, -5.0f);
+
+    void calculateChunkOffsets(int p_numHorizontal, int p_numVertical)
+    {
+        Vector3 vectorTopLeftToBotRight = (m_chunkSizeY * m_offsetBotRight);
+        m_chunkOffsetHorizontal = vectorTopLeftToBotRight.x;
+        m_chunkOffsetVectical =  vectorTopLeftToBotRight.z * 2;
+    }
 
     void FixedUpdate()
     {
@@ -105,22 +182,34 @@ public class WorldGen : MonoBehaviour
     }
 
     void Start(){
-        m_mapGrid = new MapGrid( m_origin, radius);
         m_map = new GameObject();
         m_map.transform.parent  = transform; // setting parent for tile holder
+        m_chunks = new List<WorldChunk>(m_numVertical * m_numHorizontal);
+        Debug.Log(m_chunks.Capacity);
     }
 
-    public void LoadMap()
-    {
-        m_origin = m_camera.transform.position;
-        Debug.Log("LoadMap called");
+    public void LoadMap(){
+        calculateChunkOffsets(m_numHorizontal, m_numVertical);
+        Debug.Log("LoadChunk called");
         foreach (Transform child in m_map.transform)
         {
             Destroy(child.gameObject);
         }
 
-        m_mapGrid.createHexShapedBasicGrid();
-        foreach (Vector3 v in m_mapGrid.getGrid()){
+        for (int i = 0; i < m_numHorizontal; i++){
+            for (int y = 0; y < m_numVertical; y++){
+                Vector3 curOrigin = new Vector3(i * m_chunkOffsetHorizontal,0,y*m_chunkOffsetVectical);
+                Debug.Log(curOrigin);
+                WorldChunk newChunk = new WorldChunk(curOrigin,m_chunkSizeX,m_chunkSizeY, m_offsetTopDown, m_offsetBotRight);
+                LoadGrid(ref newChunk.m_mapGrid, newChunk.m_root);
+                m_chunks.Add(newChunk);
+            }
+        }
+    }
+
+    public void LoadGrid(ref MapGrid p_grid, GameObject p_parent)
+    {
+        foreach(Vector3 v in p_grid.getGrid()){
             float x = v.x + m_origin.x;
             float y = v.z + m_origin.z;
             float[] noiseValues = getNoise(x, y, m_origin);
@@ -158,9 +247,10 @@ public class WorldGen : MonoBehaviour
                 nV.y = 0;
                 createdObject = Instantiate(toCreate,nV, Quaternion.identity);
             }
-            createdObject.transform.parent = m_map.transform;
-            invoked = false;
+            createdObject.transform.parent = p_parent.transform;
         }
+        p_parent.transform.parent = m_map.transform;
+        invoked = false;
     }
     float[] getNoise(float x, float y, Vector3 chunkOrigin){
         float[] generatedNoiseValues = new float[m_vectorNoiseGens.Length];
