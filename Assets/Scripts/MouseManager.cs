@@ -8,9 +8,10 @@ public class MouseManager : MonoBehaviour
     RaycastHit hit;
 
     public GameObject mainCamera;
-    public CameraMovement mainCameraMovement;
     public float speed = 1.0f;
     public Vector3 lastPosition;
+
+    CameraMovement mainCameraMovement;
 
     void Start()
     {
