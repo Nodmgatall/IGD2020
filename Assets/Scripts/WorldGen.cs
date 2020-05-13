@@ -199,7 +199,6 @@ public class WorldGen : MonoBehaviour
         for (int i = 0; i < m_numHorizontal; i++){
             for (int y = 0; y < m_numVertical; y++){
                 Vector3 curOrigin = new Vector3(i * m_chunkOffsetHorizontal,0,y*m_chunkOffsetVectical);
-                Debug.Log(curOrigin);
                 WorldChunk newChunk = new WorldChunk(curOrigin,m_chunkSizeX,m_chunkSizeY, m_offsetTopDown, m_offsetBotRight);
                 LoadGrid(ref newChunk.m_mapGrid, newChunk.m_root);
                 m_chunks.Add(newChunk);
