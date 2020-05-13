@@ -213,18 +213,18 @@ public class WorldGen : MonoBehaviour
             float y = v.z + m_origin.z;
             float[] noiseValues = getNoise(x, y, m_origin);
             float height = m_elevationNoise.getNoise(x,y);
-            Vector3 nV = new Vector3(v.x,(int) (height * 10 ), v.z);
-            nV.x += m_origin.x;
-            nV.z += m_origin.z;
+            Vector3 newTilePos = new Vector3(v.x,(int) (height * 50 ), v.z);
+            newTilePos.x += m_origin.x;
+            newTilePos.z += m_origin.z;
 
             GameObject createdObject;
             GameObject toCreate = standartTile;
             if(noiseValues.Sum() > 0.001f)
             {
 
-                int genIDX = noiseValues.ToList().IndexOf(Mathf.Max(noiseValues));
-                toCreate = getPrefab(genIDX);
-                if(genIDX == 2)
+                int prefabIDX = noiseValues.ToList().IndexOf(Mathf.Max(noiseValues));
+                toCreate = getPrefab(prefabIDX);
+                if(prefabIDX == 2)
                 {
                     float forestNoise  = m_forestNoiseManager.getNoise(x,y, ref m_forestNoise);
                     if(forestNoise > 0.0f)
@@ -240,11 +240,11 @@ public class WorldGen : MonoBehaviour
                         }
                     }
                 }
-                createdObject = Instantiate(toCreate,nV, Quaternion.identity);
+                createdObject = Instantiate(toCreate,newTilePos, Quaternion.identity);
             }
             else{
-                nV.y = 0;
-                createdObject = Instantiate(toCreate,nV, Quaternion.identity);
+                newTilePos.y = 0.3f * 50.0f;
+                createdObject = Instantiate(toCreate,newTilePos, Quaternion.identity);
             }
             createdObject.transform.parent = p_parent.transform;
         }
