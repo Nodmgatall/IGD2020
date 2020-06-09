@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6764690804261490172
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6764690804261490174}
+  - component: {fileID: 6764690804261490173}
+  m_Layer: 0
+  m_Name: WorldGen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6764690804261490174
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6764690804261490172}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -38.300003, y: 73.30785, z: 240}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6764690804261490173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6764690804261490172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85dd6784b5e123932888d3f25fe57289, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  standartTile: {fileID: 2064574628029001573, guid: 2a914b6a4ef15cb4ca77257050f15f29,
+    type: 3}
+  m_vectorNoiseGens:
+  - m_prefab: {fileID: 1766707373738647796, guid: 675170cac096101628421ef780afa593,
+      type: 3}
+    m_noiseSettings:
+      cutoffMin: 0.78
+      cutoffMax: 1
+  - m_prefab: {fileID: 6461190606886679958, guid: ff7ef13f88a71c94eb42898019398dcd,
+      type: 3}
+    m_noiseSettings:
+      cutoffMin: 0.3
+      cutoffMax: 0.35
+  - m_prefab: {fileID: 5575372501429904281, guid: f549c24ecaa45cb498514352a3675d1c,
+      type: 3}
+    m_noiseSettings:
+      cutoffMin: 0.35
+      cutoffMax: 0.95
+  m_elevationNoise:
+    width: 128
+    height: 128
+    pos: {x: 0, y: 0}
+    roughness: 0.008
+    strength: 1
+    nheight: 0
+  m_forestNoise:
+    width: 128
+    height: 128
+    pos: {x: 0, y: 0}
+    roughness: 0.024
+    strength: 0.6
+    nheight: 0
+  m_stoneNoise:
+    width: 128
+    height: 128
+    pos: {x: 0, y: 0}
+    roughness: 12
+    strength: 4
+    nheight: 0
+  m_forestNoiseManager:
+    m_prefab: {fileID: 41179104095966752, guid: 9b96b3a6999c089a99da619fc8561b1f,
+      type: 3}
+    m_noiseSettings:
+      cutoffMin: 0.3
+      cutoffMax: 0.6
+  m_stoneNoiseManager:
+    m_prefab: {fileID: 5044814526144528268, guid: 476946919e1d5104fb4c93f1dc2db5e9,
+      type: 3}
+    m_noiseSettings:
+      cutoffMin: 0.3
+      cutoffMax: 0.6
+  m_climate:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_camera: {fileID: 0}
+  radius: 12
+  m_origin: {x: 0, y: 75, z: 0}
+  m_numHorizontal: 5
+  m_numVertical: 5
+  m_chunkSizeX: 4
+  m_chunkSizeY: 4
