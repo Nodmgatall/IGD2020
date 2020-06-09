@@ -1,10 +1,12 @@
 ﻿using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
 
+    public WorldGen _worldGen;
 #region Map generation
     private Tile[,] _tileMap; //2D array of all spawned tiles
 #endregion
@@ -19,6 +21,8 @@ public class GameManager : MonoBehaviour
     private Dictionary<ResourceTypes, float> _resourcesInWarehouse = new Dictionary<ResourceTypes, float>(); //Holds a number of stored resources for every ResourceType
 
     //A representation of _resourcesInWarehouse, broken into individual floats. Only for display in inspector, will be removed and replaced with UI later
+    [SerializeField]
+    private float _ResourcesInWarehouse_Money;
     [SerializeField]
     private float _ResourcesInWarehouse_Fish;
     [SerializeField]
@@ -36,9 +40,32 @@ public class GameManager : MonoBehaviour
 #endregion
 
 #region Enumerations
-    public enum ResourceTypes { None, Fish, Wood, Planks, Wool, Clothes, Potato, Schnapps }; //Enumeration of all available resource types. Can be addressed from other scripts by calling GameManager.ResourceTypes
+    public enum ResourceTypes { None,Money, Fish, Wood, Planks, Wool, Clothes, Potato, Schnapps }; //Enumeration of all available resource types. Can be addressed from other scripts by calling GameManager.ResourceTypes
 #endregion
 
+    //MYSTUFF
+    //--------------------------------------------------------------
+    public float m_timePerTick = 10.0f;
+    [SerializeField]
+    private float m_ecoTickTimer  = 0.0f;
+    [SerializeField]
+    private bool m_buildModeON = false;
+
+    void ecoTick()
+    {
+        float laterImplementedSumOfAllUpkeep = 0.0f;
+        _resourcesInWarehouse[ResourceTypes.Money] += 100 - laterImplementedSumOfAllUpkeep;
+        _resourcesInWarehouse[ResourceTypes.Planks] += 100 - laterImplementedSumOfAllUpkeep;
+    }
+    public bool buildMode(){return m_buildModeON;}
+    public void createBuilding(GameObject p_tile)
+    {
+        Tile t = p_tile.GetComponent<Tile>();
+        placeBuildingOnTile(t);
+
+    }
+
+    //--------------------------------------------------------------
 #region MonoBehaviour
     // Start is called before the first frame update
     void Start()
@@ -49,6 +76,12 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        m_ecoTickTimer -= Time.deltaTime;
+        if(m_ecoTickTimer < 0.0 )
+        {
+            m_ecoTickTimer += m_timePerTick;
+            ecoTick();
+        }
         HandleKeyboardInput();
         UpdateInspectorNumbersForResources();
     }
@@ -59,6 +92,7 @@ public class GameManager : MonoBehaviour
     void PopulateResourceDictionary()
     {
         _resourcesInWarehouse.Add(ResourceTypes.None, 0);
+        _resourcesInWarehouse.Add(ResourceTypes.Money, 0);
         _resourcesInWarehouse.Add(ResourceTypes.Fish, 0);
         _resourcesInWarehouse.Add(ResourceTypes.Wood, 0);
         _resourcesInWarehouse.Add(ResourceTypes.Planks, 0);
@@ -71,6 +105,10 @@ public class GameManager : MonoBehaviour
     //Sets the index for the currently selected building prefab by checking key presses on the numbers 1 to 0
     void HandleKeyboardInput()
     {
+        if (Input.GetKeyDown("b"))
+        {
+            m_buildModeON = !m_buildModeON;
+        }
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             _selectedBuildingPrefabIndex = 0;
@@ -123,42 +161,69 @@ public class GameManager : MonoBehaviour
         _ResourcesInWarehouse_Clothes = _resourcesInWarehouse[ResourceTypes.Clothes];
         _ResourcesInWarehouse_Potato = _resourcesInWarehouse[ResourceTypes.Potato];
         _ResourcesInWarehouse_Schnapps = _resourcesInWarehouse[ResourceTypes.Schnapps];
+        _ResourcesInWarehouse_Money = _resourcesInWarehouse[ResourceTypes.Money];
     }
 
     //Checks if there is at least one material for the queried resource type in the warehouse
-    public bool HasResourceInWarehoues(ResourceTypes resource)
+    public bool HasResourceInWarehoues(ResourceTypes resource, int cnt)
     {
-        return _resourcesInWarehouse[resource] >= 1;
+        return _resourcesInWarehouse[resource] >= cnt;
     }
 
-    //Is called by MouseManager when a tile was clicked
-    //Forwards the tile to the method for spawning buildings
-    public void TileClicked(int height, int width)
+    public bool getResource(ResourceTypes resource, int cnt)
     {
-        Tile t = _tileMap[height, width];
+        if(HasResourceInWarehoues(resource,cnt))
+        {
+            _resourcesInWarehouse[resource] -=cnt;
+            return true;
+        }
+        return false;
+    }
 
-        PlaceBuildingOnTile(t);
+    public void addResource(ResourceTypes resource, int cnt)
+    {
+        _resourcesInWarehouse[resource] += cnt;
     }
 
     //Checks if the currently selected building type can be placed on the given tile and then instantiates an instance of the prefab
-    private void PlaceBuildingOnTile(Tile t)
+    private void placeBuildingOnTile(Tile t)
     {
-        //if there is building prefab for the number input
-        if (_selectedBuildingPrefabIndex < _buildingPrefabs.Length)
-        {
-            //TODO: check if building can be placed and then istantiate it
+        var gameObjPrefab = _buildingPrefabs[_selectedBuildingPrefabIndex];
+        Building bluePrint = gameObjPrefab.GetComponent<Building>();
+        if(bluePrint.canBeBuildOn.Contains(t._type)){
+            if(bluePrint.m_costMoney <  _resourcesInWarehouse[ResourceTypes.Money]){
+                if(bluePrint.m_costPlanks < _resourcesInWarehouse[ResourceTypes.Planks]){
 
+                    if(t._building == null){
+                        var theThing = Instantiate(_buildingPrefabs[_selectedBuildingPrefabIndex],t.transform.position, Quaternion.identity);
+                        var te = findNeighborsOfTile(t);
+                        var b = theThing.GetComponent<Building>();
+                        b.m_root = t;
+                        t._building = b;
+                        b.gameManager = this;
+                        b.calculateEfficiency(te);
+                    }
+                    else{
+                        Debug.Log("Selected building can not be build: another building already present");
+                    }
+                }
+                else{
+                    Debug.Log("Selected building can not be build: missing planks");
+                }
+            }
+            else{
+                Debug.Log("Selected building can not be build: missing founds");
+            }
+        }
+        else{
+            Debug.Log("Selected building can not be build on "+ t);
         }
     }
 
     //Returns a list of all neighbors of a given tile
-    private List<Tile> FindNeighborsOfTile(Tile t)
+    private List<Tile> findNeighborsOfTile(Tile t)
     {
-        List<Tile> result = new List<Tile>();
-
-        //TODO: put all neighbors in the result list
-
-        return result;
+        return _worldGen.getNeighbours(t);
     }
 #endregion
 }
