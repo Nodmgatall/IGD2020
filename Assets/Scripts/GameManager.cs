@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 {
 
     public WorldGen _worldGen;
+    public JobManager _jobManager;
 #region Map generation
     private Tile[,] _tileMap; //2D array of all spawned tiles
 #endregion
@@ -91,15 +92,15 @@ public class GameManager : MonoBehaviour
     //Makes the resource dictionary usable by populating the values and keys
     void PopulateResourceDictionary()
     {
-        _resourcesInWarehouse.Add(ResourceTypes.None, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Money, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Fish, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Wood, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Planks, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Wool, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Clothes, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Potato, 0);
-        _resourcesInWarehouse.Add(ResourceTypes.Schnapps, 0);
+        _resourcesInWarehouse.Add(ResourceTypes.None, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Money, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Fish, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Wood, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Planks, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Wool, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Clothes, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Potato, 1000);
+        _resourcesInWarehouse.Add(ResourceTypes.Schnapps, 1000);
     }
 
     //Sets the index for the currently selected building prefab by checking key presses on the numbers 1 to 0
@@ -195,12 +196,18 @@ public class GameManager : MonoBehaviour
                 if(bluePrint.m_costPlanks < _resourcesInWarehouse[ResourceTypes.Planks]){
 
                     if(t._building == null){
+
+                        _resourcesInWarehouse[ResourceTypes.Money] -= bluePrint.m_costMoney;
+                        _resourcesInWarehouse[ResourceTypes.Planks] -= bluePrint.m_costPlanks;
+
+                        bluePrint._jobManager = _jobManager;
+                        bluePrint.gameManager = this;
+                        bluePrint.m_root = t;
+
                         var theThing = Instantiate(_buildingPrefabs[_selectedBuildingPrefabIndex],t.transform.position, Quaternion.identity);
                         var te = findNeighborsOfTile(t);
                         var b = theThing.GetComponent<Building>();
-                        b.m_root = t;
                         t._building = b;
-                        b.gameManager = this;
                         b.calculateEfficiency(te);
                     }
                     else{

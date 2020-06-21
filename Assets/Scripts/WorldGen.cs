@@ -311,7 +311,7 @@ public class WorldGen : MonoBehaviour
             Tuple<int,int> chunkID = getChunkID(pos);
             if(m_chunks.ContainsKey(chunkID)){
                 var tileID = getTileFromChunk(pos,chunkID);
-                Debug.Log("added " + tileID + " " + chunkID);
+                //Debug.Log("added " + tileID + " " + chunkID);
                 l.Add(m_chunks[chunkID].m_tileMap[tileID.Item2, tileID.Item1].GetComponent<Tile>());
 
             }

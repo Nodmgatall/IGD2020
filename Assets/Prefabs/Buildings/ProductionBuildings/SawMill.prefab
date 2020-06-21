@@ -204,17 +204,17 @@ PrefabInstance:
     - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}
       propertyPath: m_efficiencyRequirements.efficiencyBooster.Array.data[0]
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}
       propertyPath: m_efficiencyRequirements.m_minTile.Array.data[0]
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}
       propertyPath: m_efficiencyRequirements.m_maxTile.Array.data[0]
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}
@@ -235,6 +235,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_numOut
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
+        type: 3}
+      propertyPath: m_jobCount
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
+        type: 3}
+      propertyPath: gameManager
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 7867284118992862418, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}

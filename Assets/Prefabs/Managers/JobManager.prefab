@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7867284118992862418
+--- !u!1 &2913562092658717053
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,57 +8,39 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 914777805309287255}
-  - component: {fileID: 3009643875500072046}
+  - component: {fileID: 2913562092658717054}
+  - component: {fileID: 2913562092658717055}
   m_Layer: 0
-  m_Name: BuildingRoot
+  m_Name: JobManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &914777805309287255
+--- !u!4 &2913562092658717054
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7867284118992862418}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.25198936, y: 0, z: -0.8641939}
+  m_GameObject: {fileID: 2913562092658717053}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3009643875500072046
+--- !u!114 &2913562092658717055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7867284118992862418}
+  m_GameObject: {fileID: 2913562092658717053}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bdaa5b167e7f3224f8a4ae63a92d95d7, type: 3}
+  m_Script: {fileID: 11500000, guid: aab032192c5a2cdaba5afe5b8a2e0a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canBeBuildOn: 
-  gameManager: {fileID: 0}
-  m_type: 
-  m_upkeep: 0
-  m_costMoney: 0
-  m_costPlanks: 0
-  m_root: {fileID: 0}
-  _workers: []
-  m_efficiency: 0
-  m_efficiencyRequirements:
-    efficiencyBooster: 
-    m_minTile: 
-    m_maxTile: 
-  m_inputs: 
-  m_requiredInputsCnt: 
-  m_output: 0
-  m_currentCycle: 0
-  m_cycleTime: 0
-  m_numOut: 0
+  _unoccupiedWorkers: []

@@ -55,7 +55,7 @@ public class MouseManager : MonoBehaviour
     {
         float mousePosX = Input.mousePosition.x;
         float mousePosY = Input.mousePosition.y;
-        mainCameraMovement.moveOnEdge(mousePosX, mousePosY);
+        //mainCameraMovement.moveOnEdge(mousePosX, mousePosY);
     }
 
     void Update()

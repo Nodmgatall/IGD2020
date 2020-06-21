@@ -843,6 +843,11 @@ PrefabInstance:
       propertyPath: m_efficiencyRequirements.m_maxTile.Array.data[0]
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 3009643875500072046, guid: 47180de04555909c2b25646c3ab7f1dd,
+        type: 3}
+      propertyPath: m_jobCount
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 7867284118992862418, guid: 47180de04555909c2b25646c3ab7f1dd,
         type: 3}
       propertyPath: m_Name
