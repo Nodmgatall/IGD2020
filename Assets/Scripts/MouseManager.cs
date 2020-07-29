@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class MouseManager : MonoBehaviour
 {
@@ -22,16 +23,18 @@ public class MouseManager : MonoBehaviour
     // Update is called once per frame
     void reactOnLeftMouseButton()
     {
-        int layerMask = LayerMask.GetMask("Tiles");
-        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast(ray, out hit, layerMask))
-        {
-            if(gameManager.buildMode())
+        if (!EventSystem.current.IsPointerOverGameObject()){
+            int layerMask = LayerMask.GetMask("Tiles");
+            ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if(Physics.Raycast(ray, out hit, layerMask))
             {
-                gameManager.createBuilding(hit.collider.gameObject);
+                if(gameManager.buildMode())
+                {
+                    gameManager.createBuilding(hit.collider.gameObject);
+                }
+                //Debug.Log(hit.collider.gameObject.name);
+                // Debug.Log(hit.collider.gameObject.transform.position.ToString() +" " + chunkID.ToString());
             }
-           //Debug.Log(hit.collider.gameObject.name);
-         // Debug.Log(hit.collider.gameObject.transform.position.ToString() +" " + chunkID.ToString());
         }
     }
 

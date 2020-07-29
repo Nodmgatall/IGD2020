@@ -47,7 +47,7 @@ value of 0.75.
 */
 
 [Serializable]
-struct EfficiencyRequirements
+class EfficiencyRequirements
 {
     public Tile.TileTypes[] efficiencyBooster;
     public int[] m_minTile;
@@ -116,6 +116,16 @@ public class ProductionBuilding : Building
                 float step =1.0f / ((float)max - (float)min);
                 m_efficiency = (numPresent - min) * step;
             }
+        }
+        if(_workers.Count == 0){
+            m_efficiency = 0.0f;
+        }
+        else{
+            m_efficiency *= m_jobCount/_jobs.Count;
+        }
+        if(m_efficiency > 0.0f)
+        {
+            m_efficiency *= getWorkerHappiness();
         }
     }
 

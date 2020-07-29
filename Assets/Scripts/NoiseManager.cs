@@ -6,7 +6,7 @@ using System;
 [Serializable]
 public class NoiseManager
 {
-    public GameObject m_prefab;
+    public Tile m_prefab;
     public NoiseSettings m_noiseSettings;
 
     public float getNoise(float x, float y,ref perlinNoise p_noiseGenerator)
@@ -19,7 +19,7 @@ public class NoiseManager
         return noiseValue;
     }
 
-    public GameObject getPrefab()
+    public Tile getPrefab()
     {
         return m_prefab;
     }

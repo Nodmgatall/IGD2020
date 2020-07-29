@@ -4,6 +4,19 @@ using UnityEngine;
 
 public class Worker : MonoBehaviour
 {
+    public const int adultAge = 4;
+    public const int retireAge = 10;
+    public const int deathAge = 20;
+    [SerializeField]
+    public static int numElderly;
+    [SerializeField]
+    public static int numChildren;
+    [SerializeField]
+    public static int numAdult;
+    [SerializeField]
+    public static int numEmployed;
+    [SerializeField]
+    public static int numUnimployed;
 #region Manager References
     public JobManager _jobManager; //Reference to the JobManager
     public GameManager _gameManager;//Reference to the GameManager
@@ -22,9 +35,11 @@ public class Worker : MonoBehaviour
     void Start()
     {
         Debug.Log("Worker Created");
-        m_currentCycle = m_cycleLength;
+        m_currentCycle = -0.0f;
         _happiness = 1.0f;
         _age = 0;
+        numChildren++;
+        Age();
     }
 
     void upkeep()
@@ -41,10 +56,9 @@ public class Worker : MonoBehaviour
     {
         float deltaT = Time.deltaTime;
         m_currentCycle -= deltaT;
-        if(m_currentCycle < 0.0f)
+        if(m_currentCycle <= 0.0f)
         {
             //Debug.Log("LOL " + m_currentCycle+ "  " + m_cycleLength +  " " + GetInstanceID().ToString());
-            _age++;
             bool alive = Age();
             if(alive)
             {
@@ -59,28 +73,32 @@ public class Worker : MonoBehaviour
     {
         switch(_age)
         {
-            case 0:
-                break;
-            case 2:
+            case adultAge:
                 BecomeOfAge();
                 break;
-            case 10:
+            case retireAge:
+                numElderly++;
+                numAdult--;
                 Retire();
                 break;
             default:
-                if(_age > 100){
+                if(_age == deathAge){
                     Die();
+                    numElderly--;
                     return false;
                 }
                 break;
         }
+        _age++;
         return true;
 
     }
-
+    public int GetAge(){return _age;}
 
     public void BecomeOfAge()
     {
+        numChildren--;
+        numAdult++;
         _jobManager.RegisterWorker(this);
     }
 

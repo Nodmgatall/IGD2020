@@ -44,9 +44,18 @@ public abstract class Building : MonoBehaviour
 
     public virtual void WorkerRemovedFromBuilding(Worker w)
     {
-        Debug.Log("calling this as expected "+ w._age);
+        Debug.Log("calling this as expected "+ w.GetAge());
         _workers.Remove(w);
     }
     #endregion
+
+    protected float getWorkerHappiness(){
+        float sumhappy = 0.0f;
+        foreach(var w in _workers)
+        {
+            sumhappy += w._happiness;
+        }
+        return sumhappy/_workers.Count;
+    }
 }
 

@@ -83,7 +83,7 @@ public class WorldChunk{
     public Vector3 m_origin;
     public MapGrid m_mapGrid;
     public Tuple<int,int> m_chunkID;
-    public GameObject[,] m_tileMap;
+    public Tile[,] m_tileMap;
 
     [HideInInspector]
     public GameObject m_root;
@@ -92,9 +92,10 @@ public class WorldChunk{
     {
         m_chunkID = p_chunkID;
         m_root = new GameObject();
+        m_root.name = "Chunk " + p_chunkID.ToString();
         m_origin = p_origin;
         m_mapGrid = new MapGrid(p_origin, p_numHorizontal, p_numVertical,p_offsetTop, p_offsetBotRight);
-        m_tileMap = new GameObject[p_numHorizontal, p_numVertical];
+        m_tileMap = new Tile[p_numHorizontal, p_numVertical];
         m_mapGrid.create();
     }
 };
@@ -105,7 +106,7 @@ public class WorldGen : MonoBehaviour
     // Start is called before the first frame update
     Dictionary<Tuple<int,int>, WorldChunk> m_chunks;
 
-    public GameObject standartTile;
+    public Tile standartTile;
     GameObject m_map; // dummy object to hold generated tiles as children
 
     public NoiseManager[] m_vectorNoiseGens;
@@ -128,6 +129,8 @@ public class WorldGen : MonoBehaviour
     public int m_chunkSizeX;
     public int m_chunkSizeY;
 
+    private Vector3[] dirs;
+
     Vector3 m_offsetTopDown = new Vector3(0f,0f,10f);
     Vector3 m_offsetBotRight = new Vector3(8.6625f,0f, -5.0f);
 
@@ -146,24 +149,12 @@ public class WorldGen : MonoBehaviour
             LoadMap();
         }
     }
-    bool invoked = false;
 
-    void OnValidate()
-    {
-
-        if(invoked == false){
-            Invoke("LoadMap",1);
-            invoked = true;
-        }
-    }
-
-    void Start(){
+    public void LoadMap(){
         m_map = new GameObject();
         m_map.transform.parent  = transform; // setting parent for tile holder
         m_chunks = new Dictionary<Tuple<int,int>, WorldChunk>();
-    }
-
-    public void LoadMap(){
+        dirs = createDirs();
         calculateChunkOffsets(m_numHorizontal, m_numVertical);
         Debug.Log("LoadChunk called");
         foreach (Transform child in m_map.transform)
@@ -179,6 +170,34 @@ public class WorldGen : MonoBehaviour
                 WorldChunk newChunk = new WorldChunk(ID,curOrigin,m_chunkSizeX,m_chunkSizeY, m_offsetTopDown, m_offsetBotRight);
                 LoadGrid(ref newChunk, newChunk.m_root);
                 m_chunks.Add(ID,newChunk);
+            }
+        }
+
+        for (int x = 0; x < m_numHorizontal; x++){
+            for (int y = 0; y < m_numVertical; y++){
+
+                var chunkID =  new Tuple<int,int>(x, -y);
+                var chunk = m_chunks[chunkID];
+                for(int c_x = 0; c_x < m_chunkSizeX; c_x++)
+                {
+                    for(int c_y = 0; c_y < m_chunkSizeY; c_y++){
+                        var cur_tile = chunk.m_tileMap[c_x,c_y];
+                        var on_off_bools = getNeighbourTileTypes(cur_tile);
+                        var edgeRoot = cur_tile.transform.Find("Edges");
+                        int i = 0;
+                        foreach (Transform child in edgeRoot.transform)
+                        {
+                            print(child.name + " " + i);
+                            if(child.name != "default"){
+                                if(on_off_bools[i]){
+                                    child.gameObject.SetActive(false);
+                                }
+                                i++;
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }
@@ -197,8 +216,8 @@ public class WorldGen : MonoBehaviour
                 newTilePos.x += m_origin.x;
                 newTilePos.z += m_origin.z;
 
-                GameObject createdObject;
-                GameObject toCreate = standartTile;
+                Tile createdObject;
+                Tile toCreate = standartTile;
                 if(noiseValues.Sum() > 0.001f)
                 {
 
@@ -232,7 +251,6 @@ public class WorldGen : MonoBehaviour
             }
         }
         p_parent.transform.parent = m_map.transform;
-        invoked = false;
     }
     float[] getNoise(float x, float y, Vector3 chunkOrigin){
         float[] generatedNoiseValues = new float[m_vectorNoiseGens.Length];
@@ -254,7 +272,7 @@ public class WorldGen : MonoBehaviour
     }
 
 
-    GameObject getPrefab(int p_vectorIDxTile)
+    Tile getPrefab(int p_vectorIDxTile)
     {
         if(m_vectorNoiseGens[p_vectorIDxTile] != null) //dont use unset prefabs
             return m_vectorNoiseGens[p_vectorIDxTile].getPrefab();
@@ -291,18 +309,46 @@ public class WorldGen : MonoBehaviour
         //Debug.Log(chunkID.ToString() + " " + tileID);
         return tileID;
     }
+    private Vector3[] createDirs(){
+
+        //caution!!! the order is important and is used elsewhere
+        //DO NOT CHANGE THE ORDER: the order will always be: top, topRight,botRight,bot,botLeft,TopLeft
+        Vector3 test = new Vector3 (8.66025f,0, 10.0f);
+        return new Vector3[] {
+            /* clang-format off */
+            /* top      */ Vector3.Scale(new Vector3(0      , 0 , +1)    , test) ,
+            /* topRight */ Vector3.Scale(new Vector3(+1 , 0 , +0.5f) , test) ,
+            /* botRight */ Vector3.Scale(new Vector3(+1 , 0 , -0.5f) , test) ,
+            /* bot      */ Vector3.Scale(new Vector3(0  , 0 , -1)    , test) ,
+            /* botLeft  */ Vector3.Scale(new Vector3(-1 , 0 , -0.5f) , test) ,
+            /* topLeft  */ Vector3.Scale(new Vector3(-1 , 0 , +0.5f) , test)
+            /* clang-format on */
+        };
+        // CAUTION READ BEFORE CHANGE!
+
+    }
+
+
+    /* depends on order of createDirs */
+    public bool[] getNeighbourTileTypes(Tile p_tile){
+        var tilePos = p_tile.transform.position;
+        var l = new bool[]{false,false,false,false,false,false};
+        getTileFromChunk(tilePos, getChunkID(tilePos));
+        for (int i = 0; i < 6; i++){
+            var pos = tilePos + dirs[i];
+            Tuple<int,int> chunkID = getChunkID(pos);
+            if(m_chunks.ContainsKey(chunkID)){
+                var tileID = getTileFromChunk(pos,chunkID);
+                //Debug.Log("added " + tileID + " " + chunkID);
+                l[i] = (m_chunks[chunkID].m_tileMap[tileID.Item2, tileID.Item1].GetComponent<Tile>()._type == p_tile._type);
+            }
+        }
+        return l;
+    }
+
 
     public List<Tile> getNeighbours(Tile p_tile)
     {
-        Vector3 test = new Vector3 (8.66025f,0, 10.0f);
-        Vector3[] dirs = {
-            Vector3.Scale(new Vector3(0,0,-1), test),
-            Vector3.Scale(new Vector3(0,0,+1),test),
-            Vector3.Scale(new Vector3(+1,0,-0.5f),test),
-            Vector3.Scale(new Vector3(+1,0,0.5f),test),
-            Vector3.Scale(new Vector3(-1,0,-0.5f),test),
-            Vector3.Scale(new Vector3(-1,0,0.5f), test)
-        };
         var tilePos = p_tile.transform.position;
         var l = new List<Tile>();
         getTileFromChunk(tilePos, getChunkID(tilePos));

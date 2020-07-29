@@ -13,6 +13,7 @@ public class HousingBuilding : Building
         w._jobManager = _jobManager;
         w._gameManager = gameManager;
         w.hb = this;
+        w._age = Worker.adultAge;
         _workers.Add(w);
     }
     protected override void Start()
@@ -29,12 +30,7 @@ public class HousingBuilding : Building
     }
 
     void updateEfficiency(){
-        float sumHappy = 0.0f;
-        foreach(var w in _workers)
-        {
-            sumHappy += w._happiness;
-        }
-        m_efficiency = sumHappy/_workers.Count;
+        m_efficiency = getWorkerHappiness();
     }
     public override void Update()
     {

@@ -29,11 +29,12 @@ public class CameraMovement : MonoBehaviour
         theScreenHeight = Screen.height;
         m_boundaryX = theScreenWidth * boundaryFractionX; // TODO: change on resize
         m_boundaryY = theScreenHeight * boundaryFractionY;
+        jumpTo(0,0);
     }
     public void handleZoom(float p_deltaMouseWheel){
 
-            float newHeight = Mathf.Max(transform.position.y - (p_deltaMouseWheel * m_zoomSpeed), m_minHeight);
-            transform.position = new Vector3(transform.position.x,Mathf.Min(newHeight, m_maxHeight),transform.position.z); //TODO integrate into change vector
+        float newHeight = Mathf.Max(transform.position.y - (p_deltaMouseWheel * m_zoomSpeed), m_minHeight);
+        transform.position = new Vector3(transform.position.x,Mathf.Min(newHeight, m_maxHeight),transform.position.z); //TODO integrate into change vector
     }
 
     // Update is called once per frame
